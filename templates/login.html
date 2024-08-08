@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+{% block title %}
+Login Page
+{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Login</h2>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    <form action="" method="POST" class="form">
+        <div class="form-group">
+            <label for="role" class="form-label">Login as</label>
+            <select class="form-control" id="role" name="role" required>
+                <option value="" disabled selected>Select role</option>
+                <option value="admin">Admin</option>
+                <option value="sponsor">Sponsor</option>
+                <option value="influencer">Influencer</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block mt-3">Login</button>
+    </form>
+    <div class="d-flex justify-content-between mt-3">
+        <a href="" class="btn btn-link">Forgot details?</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+{
+    "python.REPL.enableREPLSmartSend": false,
+    "CodeGPT.apiKey": "Google AI Studio"
+}

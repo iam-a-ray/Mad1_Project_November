@@ -1,0 +1,53 @@
+{% extends 'layout.html' %}
+{% block title %}
+Register as Influencer
+{% endblock %}
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center">Register as Influencer</h1>
+        <form action="" method="POST" class="form">
+            <div class="form-group">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+            </div>
+            <div class="form-group">
+                <label for="email" class="form-label">Email-id</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="platform" class="form-label">Platform</label>
+                <select class="form-control" id="platform" name="platform" required>
+                    <option value="" disabled selected>Select platform</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="twitter">Twitter</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="handles" class="form-label">Social media handles</label>
+                <input type="text" class="form-control" id="handles" name="handles" required>
+            </div>
+            <div class="form-group">
+                <label for="category" class="form-label">Category</label>
+                <input type="text" class="form-control" id="category" name="category" required>
+            </div>
+            <div class="form-group">
+                <label for="follower_count" class="form-label">Follower Count</label>
+                <input type="number" class="form-control" id="follower_count" name="follower_count" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block mt-3">Register</button>
+        </form>
+    </div>
+{% endblock %}
