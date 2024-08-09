@@ -1,0 +1,66 @@
+{% extends 'layout.html' %}
+{% block title %}
+Update Influencer Information
+{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Update Influencer Information</h2>
+
+    <form action="" method="POST" class="form">
+        <div class="form-group">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ user.Name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ user.Username }}" required>
+        </div>
+        <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.Email }}" required>
+        </div>
+        <div class="form-group">
+            <label for="password" class="form-label">Current Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="new_password" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password">
+        </div>
+        <div class="form-group">
+            <label for="confirm_password" class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+        </div>
+        <div class="form-group">
+            <label for="platform" class="form-label">Platform</label>
+            <input type="text" class="form-control" id="platform" name="platform" value="{{ user.Platform }}" required>
+        </div>
+        <div class="form-group">
+            <label for="handles" class="form-label">Handles</label>
+            <input type="text" class="form-control" id="handles" name="handles" value="{{ user.Handles }}" required>
+        </div>
+        <div class="form-group">
+            <label for="category" class="form-label">Category</label>
+            <input type="text" class="form-control" id="category" name="category" value="{{ user.Category }}" required>
+        </div>
+        <div class="form-group">
+            <label for="reach" class="form-label">Reach</label>
+            <input type="number" class="form-control" id="reach" name="reach" value="{{ user.Reach }}" required>
+        </div>
+        <div class="form-group">
+            <label for="niche" class="form-label">Niche</label>
+            <input type="text" class="form-control" id="niche" name="niche" value="{{ user.Niche }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mt-3">Update Profile</button>
+    </form>
+
+    <hr>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}

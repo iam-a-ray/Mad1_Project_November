@@ -1,0 +1,44 @@
+{% extends 'layout.html' %}
+{% block title %}
+Update Sponsor Information
+{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Update Sponsor Information</h2>
+
+    <form action="" method="POST" class="form">
+        <div class="form-group">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ user.Name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ user.Username }}" required>
+        </div>
+        <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.Email }}" required>
+        </div>
+        <div class="form-group">
+            <label for="password" class="form-label">Current Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="new_password" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password">
+        </div>
+        <div class="form-group">
+            <label for="confirm_password" class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+        </div>
+        <div class="form-group">
+            <label for="company" class="form-label">Company Name</label>
+            <input type="text" class="form-control" id="company" name="company" value="{{ user.CompanyName }}" required>
+        </div>
+        <div class="form-group">
+            <label for="industry" class="form-label">Industry</label>
+            <input type="text" class="form-control" id="industry" name="industry" value="{{ user.Industry }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mt-3">Update Profile</button>
+    </form>
+{% endblock %}

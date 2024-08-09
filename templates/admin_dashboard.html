@@ -1,7 +1,10 @@
 {% extends 'layout.html' %}
 {% block title %}
-    Admin dashboard
+Admin Dashboard
 {% endblock %}
 {% block content %}
-Hello {{user.Username}}  you are admin 
+<div class="container mt-5">
+    <h2 class="text-center">Admin Dashboard</h2>
+    <a href="{{ url_for('updateAdminInfo') }}" class="btn btn-primary">Update Information</a>
+</div>
 {% endblock %}
