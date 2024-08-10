@@ -1,0 +1,69 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+Profile - {{ user.Username }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Profile</h2>
+    <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{ user.Username }}" alt="avatar" width="150" class="rounded-circle mb-3"/>
+    <h4 class="text-center">{{ user.Name }}</h4>
+    <p class="text-center text-muted">{{ user.Email }}</p>
+
+    <!-- Admin-specific profile details -->
+    {% if user.isAdmin %}
+    <div class="mt-4">
+        <h5 class="text-center">Admin Details</h5>
+        <ul class="list-group">
+            <li class="list-group-item">Username: {{ user.Username }}</li>
+            <li class="list-group-item">Email: {{ user.Email }}</li>
+            <li class="list-group-item">Role: Admin</li>
+        </ul>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('updateAdminInfo') }}" class="btn btn-primary">Update Information</a>
+    </div>
+    {% endif %}
+
+    <!-- Influencer-specific profile details -->
+    {% if user.isInfluencer %}
+    <div class="mt-4">
+        <h5 class="text-center">Influencer Details</h5>
+        <ul class="list-group">
+            <li class="list-group-item">Username: {{ user.Username }}</li>
+            <li class="list-group-item">Email: {{ user.Email }}</li>
+            <li class="list-group-item">Platform: {{ user.Platform }}</li>
+            <li class="list-group-item">Handles: {{ user.Handles }}</li>
+            <li class="list-group-item">Category: {{ user.Category }}</li>
+            <li class="list-group-item">Follower Count: {{ user.Reach }}</li>
+            <li class="list-group-item">Niche: {{ user.Niche }}</li>
+        </ul>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('updateInfInfo') }}" class="btn btn-primary">Update Information</a>
+    </div>
+    {% endif %}
+
+    <!-- Sponsor-specific profile details -->
+    {% if user.isSponsor %}
+    <div class="mt-4">
+        <h5 class="text-center">Sponsor Details</h5>
+        <ul class="list-group">
+            <li class="list-group-item">Name: {{ user.Name }}</li>
+            <li class="list-group-item">Username: {{ user.Username }}</li>
+            <li class="list-group-item">Email: {{ user.Email }}</li>
+            <li class="list-group-item">Industry: {{ user.Industry }}</li>
+            <li class="list-group-item">Company: {{ user.CompanyName }}</li>
+        </ul>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('updateSponsorInfo') }}" class="btn btn-primary">Update Information</a>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-5">
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+    </div>
+</div>
+{% endblock %}

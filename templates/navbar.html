@@ -1,11 +1,71 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">InSCo</a>
+        <a class="navbar-brand" href="{{url_for('insco')}}">InSCo</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {% if 'user_id' in session %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('index')}}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('profile')}}">Profile</a>
+                </li>
+                
+                {% if session.get('role') == 'admin' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('admin_dashboard')}}">Admin Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('updateAdminInfo')}}">Update Information</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Manage Users</a>
+                </li>
+                {% endif %}
+                
+                {% if session.get('role') == 'influencer' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('inf_dashboard')}}">Influencer Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('updateInfInfo')}}">Update Information</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#}">Manage Content</a>
+                </li>
+                {% endif %}
+                
+                {% if session.get('role') == 'sponsor' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('spon_dashboard')}}">Sponsor Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('updateSponsorInfo')}}">Update Information</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Manage Campaigns
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{url_for('create_campaign')}}">Create New campaign</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('view_campaigns')}}">View Camapigns</a></li>
+                    </ul>
+                </li>  
+                {% endif %}
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Search</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Inbox</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Notifications</a>
+                </li>
+                {% else %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{url_for('login')}}">Login</a>
                 </li>
@@ -17,7 +77,9 @@
                         <li><a class="dropdown-item" href="{{url_for('registerAsInf')}}">Register As Influencer</a></li>
                         <li><a class="dropdown-item" href="{{url_for('registerAsSponsor')}}">Register As Sponsor</a></li>
                     </ul>
-                </li>
+                </li>  
+                {% endif %}
+                
             </ul>
             <!-- This div pushes the Logout link to the right -->
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">

@@ -21,6 +21,7 @@ class User(db.Model):
     Category = db.Column(db.String(100))
     Niche = db.Column(db.String(100))
     Reach = db.Column(db.Integer)
+    # Rating = db.Column(db.Float)
 
     def check_password(self, password):
         return check_password_hash(self.Passhash, password)
@@ -39,6 +40,8 @@ class Campaign(db.Model):
     Budget = db.Column(db.Float)
     Visibility = db.Column(db.String(10))  # 'public' or 'private'
     Goals = db.Column(db.Text)
+    Status = db.Column(db.Boolean)
+    # Rating= db.Column(db.Integer) 
 
     sponsor = db.relationship('User', backref=db.backref('campaigns', lazy=True), foreign_keys=[SponsorID])
 

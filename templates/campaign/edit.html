@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Edit Campaign
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Edit Campaign</h2>
+        <form action="" method="POST">
+            <div class="form-group">
+                <label for="name">Campaign Name:</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ campaign.Name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea class="form-control" id="description" name="description" rows="5">{{ campaign.Description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="start_date">Start Date:</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ campaign.StartDate }}" required>
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date:</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ campaign.EndDate }}" required>
+            </div>
+            <div class="form-group">
+                <label for="budget">Budget:</label>
+                <input type="number" class="form-control" id="budget" name="budget" step="0.01" value="{{ campaign.Budget }}" required>
+            </div>
+            <div class="form-group">
+                <label for="visibility">Visibility:</label>
+                <select class="form-control" id="visibility" name="visibility" required>
+                    <option value="public" {% if campaign.Visibility == 'public' %}selected{% endif %}>Public</option>
+                    <option value="private" {% if campaign.Visibility == 'private' %}selected{% endif %}>Private</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select class="form-control" id="status" name="status">
+                    <option value="auto">Auto (Based on Dates)</option>
+                    <option value="1" {% if campaign.Status %}selected{% endif %}>Active</option>
+                    <option value="0" {% if not campaign.Status %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="goals">Campaign Goals:</label>
+                <textarea class="form-control" id="goals" name="goals" rows="5">{{ campaign.Goals }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-edit"></i> Update Campaign</button>
+        </form>
+    </div>
+{% endblock %}
