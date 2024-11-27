@@ -1,87 +1,113 @@
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 from app import app
-from werkzeug.security import generate_password_hash,check_password_hash
-db=SQLAlchemy(app)
 
+db = SQLAlchemy(app)
+
+# User model for all types of users (admin, customer, professional)
 class User(db.Model):
+    """
+    Represents a user in the system (admin, customer, or service professional).
+    """
     __tablename__ = 'user'
     UserID = db.Column(db.Integer, primary_key=True)
-    Username = db.Column(db.String(80), unique=True, nullable=False)
+    Username = db.Column(db.String(50), unique=True, index=True, nullable=False)
     Passhash = db.Column(db.String(256), nullable=False)
     Name = db.Column(db.String(100), nullable=False)
-    Email = db.Column(db.String(120), unique=True, nullable=False)
+    Email = db.Column(db.String(100), unique=True, index=True, nullable=False)
+    Phone = db.Column(db.String(15), nullable=True)
     isAdmin = db.Column(db.Boolean, nullable=False, default=False)
-    isSponsor = db.Column(db.Boolean, nullable=False, default=False)
-    isInfluencer = db.Column(db.Boolean, nullable=False, default=False)
-    CompanyName = db.Column(db.String(100))
-    Industry = db.Column(db.String(100))
-    Budget = db.Column(db.Float)
-    Platform = db.Column(db.String(100))
-    Handles = db.Column(db.String(100))
-    Category = db.Column(db.String(100))
-    Niche = db.Column(db.String(100))
-    Reach = db.Column(db.Integer)
-    # Rating = db.Column(db.Float)
+    isCustomer = db.Column(db.Boolean, nullable=False, default=False)
+    isProfessional = db.Column(db.Boolean, nullable=False, default=False)
+    Address = db.Column(db.String(200), nullable=True)
+    Experience = db.Column(db.String(100), nullable=True)  # For professionals only
+    Profession = db.Column(db.String(100), nullable=True)  # Professional's expertise
+    Reviews = db.Column(db.Text, nullable=True)
+    Rating = db.Column(db.Float)
+
+    def set_password(self, password):
+        """Hash and set the user's password."""
+        self.Passhash = generate_password_hash(password)
 
     def check_password(self, password):
+        """Check the user's password."""
         return check_password_hash(self.Passhash, password)
 
     def __repr__(self):
         return f'<User {self.Username}>'
-    
-class Campaign(db.Model):
-    __tablename__ = 'campaign'
-    CampaignID = db.Column(db.Integer, primary_key=True)
-    SponsorID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
-    Name = db.Column(db.String(100), nullable=False)
-    Description = db.Column(db.Text)
-    StartDate = db.Column(db.Date)
-    EndDate = db.Column(db.Date)
-    Budget = db.Column(db.Float)
-    Visibility = db.Column(db.String(10))  # 'public' or 'private'
-    Goals = db.Column(db.Text)
-    Status = db.Column(db.Boolean)
-    # Rating= db.Column(db.Integer) 
 
-    sponsor = db.relationship('User', backref=db.backref('campaigns', lazy=True), foreign_keys=[SponsorID])
+# Service model for available household services
+class Service(db.Model):
+    """
+    Represents a household service provided on the platform.
+    """
+    __tablename__ = 'service'
+    ServiceID = db.Column(db.Integer, primary_key=True)
+    Name = db.Column(db.String(100), nullable=False, unique=True)
+    Description = db.Column(db.Text, nullable=True)
+    BasePrice = db.Column(db.Float, nullable=False)
+    TimeRequired = db.Column(db.Integer, nullable=False)  # Time required in minutes
 
     def __repr__(self):
-        return f'<Campaign {self.Name}>'
-    
-class AdRequest(db.Model):
-    __tablename__ = 'ad_request'
-    AdRequestID = db.Column(db.Integer, primary_key=True)
-    CampaignID = db.Column(db.Integer, db.ForeignKey('campaign.CampaignID'), nullable=False)
-    InfluencerID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
-    Messages = db.Column(db.Text)
-    Requirements = db.Column(db.Text)
-    PaymentAmount = db.Column(db.Float)
-    Status = db.Column(db.String(20))  # pending, accepted or rejected request
+        return f'<Service {self.Name}>'
 
-    campaign = db.relationship('Campaign', backref=db.backref('ad_requests', lazy=True))
-    influencer = db.relationship('User', backref=db.backref('ad_requests', lazy=True), foreign_keys=[InfluencerID])
+# ServiceRequest model for tracking customer service requests
+class ServiceRequest(db.Model):
+    """
+    Represents a service request made by a customer and assigned to a professional.
+    """
+    __tablename__ = 'service_request'
+    RequestID = db.Column(db.Integer, primary_key=True)
+    ServiceID = db.Column(db.Integer, db.ForeignKey('service.ServiceID'), nullable=False)
+    CustomerID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
+    ProfessionalID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=True)  # Assigned professional
+    DateOfRequest = db.Column(db.Date, nullable=False)
+    DateOfCompletion = db.Column(db.Date, nullable=True)
+    CreatedAt = db.Column(db.DateTime, default=db.func.now())
+    UpdatedAt = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    Status = db.Column(
+        db.Enum('requested', 'assigned', 'closed', name='request_status'),
+        default='requested',
+        nullable=False
+    )
+    Remarks = db.Column(db.Text, nullable=True)
+
+    # Relationships
+    service = db.relationship('Service', backref=db.backref('service_requests', cascade='all, delete', lazy=True))
+    customer = db.relationship('User', foreign_keys=[CustomerID], backref=db.backref('customer_requests', lazy=True))
+    professional = db.relationship('User', foreign_keys=[ProfessionalID], backref=db.backref('assigned_requests', lazy=True))
 
     def __repr__(self):
-        return f'<AdRequest {self.AdRequestID}>'
-    
+        return f'<ServiceRequest {self.RequestID}>'
+
+# FlaggedUser model for tracking flagged users
 class FlaggedUser(db.Model):
+    """
+    Represents a flagged user for fraudulent activity or poor reviews.
+    """
     __tablename__ = 'flagged_user'
     FlaggedUserID = db.Column(db.Integer, primary_key=True)
     UserID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
-    Reason = db.Column(db.Text)
+    Reason = db.Column(db.Text, nullable=False)
 
+    # Relationships
     user = db.relationship('User', backref=db.backref('flagged_entries', lazy=True))
 
     def __repr__(self):
         return f'<FlaggedUser {self.FlaggedUserID}>'
-    
+
+# Initialize database and add admin user if not already present
 with app.app_context():
     db.create_all()
 
-    admin = User.query.filter_by(isAdmin=True).first()
-    if not admin:
-        password_hash = generate_password_hash('admin')
-        new_admin = User(Username='admin', Passhash=password_hash, Name='admin', Email='admin@example.com', isAdmin=True)
-        db.session.add(new_admin)
+    # Ensure an admin user exists
+    if not User.query.filter_by(Username='admin', isAdmin=True).first():
+        admin = User(
+            Username='admin',
+            Name='Administrator',
+            Email='admin@example.com',
+            isAdmin=True
+        )
+        admin.set_password('admin')  # Set default admin password
+        db.session.add(admin)
         db.session.commit()
-    # Check if admin is already present in the database or not, if not, then add it to the database

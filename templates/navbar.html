@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{url_for('insco')}}">InSCo</a>
+        <a class="navbar-brand" href="{{url_for('househelp')}}">HouseHelp</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -26,32 +26,38 @@
                 </li>
                 {% endif %}
                 
-                {% if session.get('role') == 'influencer' %}
+                {% if session.get('role') == 'professional' %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('inf_dashboard')}}">Influencer Dashboard</a>
+                    <a class="nav-link" href="{{url_for('professional_dashboard')}}">Professional Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('updateInfInfo')}}">Update Information</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#}">Manage Content</a>
-                </li>
-                {% endif %}
-                
-                {% if session.get('role') == 'sponsor' %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('spon_dashboard')}}">Sponsor Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('updateSponsorInfo')}}">Update Information</a>
+                    <a class="nav-link" href="{{url_for('updateProfessionalInfo')}}">Update Information</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Manage Campaigns
+                        Manage Service Requests
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{url_for('create_campaign')}}">Create New campaign</a></li>
-                        <li><a class="dropdown-item" href="{{url_for('view_campaigns')}}">View Camapigns</a></li>
+                        <li><a class="dropdown-item" href="#}">View Service request</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('working_service_request')}}">Working Service Requests</a></li>
+                    </ul>
+                </li> 
+                {% endif %}
+                
+                {% if session.get('role') == 'customer' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('customer_dashboard')}}">Customer Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('updateCustomerInfo')}}">Update Information</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Manage Requests
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{url_for('create_requests')}}">Create New Requests</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('view_requests')}}">View Requests</a></li>
                     </ul>
                 </li>  
                 {% endif %}
@@ -74,8 +80,8 @@
                         Register
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{url_for('registerAsInf')}}">Register As Influencer</a></li>
-                        <li><a class="dropdown-item" href="{{url_for('registerAsSponsor')}}">Register As Sponsor</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('registerAsProfessional')}}">Register As Professional</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('registerAsCustomer')}}">Register As Customer</a></li>
                     </ul>
                 </li>  
                 {% endif %}

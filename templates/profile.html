@@ -26,39 +26,38 @@ Profile - {{ user.Username }}
     </div>
     {% endif %}
 
-    <!-- Influencer-specific profile details -->
-    {% if user.isInfluencer %}
+    <!-- Professional-specific profile details -->
+    {% if user.isProfessional %}
     <div class="mt-4">
-        <h5 class="text-center">Influencer Details</h5>
+        <h5 class="text-center">Professional Details</h5>
         <ul class="list-group">
             <li class="list-group-item">Username: {{ user.Username }}</li>
             <li class="list-group-item">Email: {{ user.Email }}</li>
-            <li class="list-group-item">Platform: {{ user.Platform }}</li>
-            <li class="list-group-item">Handles: {{ user.Handles }}</li>
-            <li class="list-group-item">Category: {{ user.Category }}</li>
-            <li class="list-group-item">Follower Count: {{ user.Reach }}</li>
-            <li class="list-group-item">Niche: {{ user.Niche }}</li>
+            <li class="list-group-item">Profession: {{ user.Profession }}</li>
+            <li class="list-group-item">Phone: {{ user.Phone }}</li>
+            <li class="list-group-item">Address: {{ user.Address }}</li>
+            <li class="list-group-item">Experience: {{ user.Experience }}</li>
         </ul>
     </div>
     <div class="text-center mt-4">
-        <a href="{{ url_for('updateInfInfo') }}" class="btn btn-primary">Update Information</a>
+        <a href="{{ url_for('updateProfessionalInfo') }}" class="btn btn-primary">Update Information</a>
     </div>
     {% endif %}
 
     <!-- Sponsor-specific profile details -->
-    {% if user.isSponsor %}
+    {% if user.isCustomer %}
     <div class="mt-4">
-        <h5 class="text-center">Sponsor Details</h5>
+        <h5 class="text-center">Customer Details</h5>
         <ul class="list-group">
             <li class="list-group-item">Name: {{ user.Name }}</li>
             <li class="list-group-item">Username: {{ user.Username }}</li>
             <li class="list-group-item">Email: {{ user.Email }}</li>
-            <li class="list-group-item">Industry: {{ user.Industry }}</li>
-            <li class="list-group-item">Company: {{ user.CompanyName }}</li>
+            <li class="list-group-item">Phone: {{ user.Phone }}</li>
+            <li class="list-group-item">Address: {{ user.Address }}</li>
         </ul>
     </div>
     <div class="text-center mt-4">
-        <a href="{{ url_for('updateSponsorInfo') }}" class="btn btn-primary">Update Information</a>
+        <a href="{{ url_for('updateCustomerInfo') }}" class="btn btn-primary">Update Information</a>
     </div>
     {% endif %}
 

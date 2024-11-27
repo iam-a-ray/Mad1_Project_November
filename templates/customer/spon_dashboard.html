@@ -19,7 +19,7 @@ Sponsor Dashboard
     <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{user.Username}}" alt="avatar" width="100"/>
     <h2>Welcome, {{ user.Name }}</h2>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-primary mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Total Campaigns</h5>
@@ -27,7 +27,7 @@ Sponsor Dashboard
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-success mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Active Campaigns</h5>
@@ -35,11 +35,19 @@ Sponsor Dashboard
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-warning mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Budget Spent</h5>
                     <p class="card-text">₹{{ total_budget_spent }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Sponsor Rating</h5>
+                    <p class="card-text">{{ sponsor_rating }}</p>
                 </div>
             </div>
         </div>
@@ -60,6 +68,7 @@ Sponsor Dashboard
                 <th>Visibility</th>
                 <th>Budget</th>
                 <th>Status</th>
+                <th>Influencer</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -76,6 +85,13 @@ Sponsor Dashboard
                             Active
                         {% else %}
                             Completed
+                        {% endif %}
+                    </td>
+                    <td>
+                    {% if campaign_influencers[campaign.CampaignID] %}
+                            {{ campaign_influencers[campaign.CampaignID] }}
+                        {% else %}
+                            Not Assigned
                         {% endif %}
                     </td>
                     <td>
