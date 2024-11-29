@@ -77,6 +77,7 @@ class ServiceRequest(db.Model):
     __tablename__ = 'service_request'
     RequestID = db.Column(db.Integer, primary_key=True)
     ServiceID = db.Column(db.Integer, db.ForeignKey('service.ServiceID'), nullable=False)
+    CategoryID = db.Column(db.Integer, db.ForeignKey('service_category.CategoryID'), nullable=False)
     CustomerID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
     ProfessionalID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=True)  # Assigned professional
     DateOfRequest = db.Column(db.Date, nullable=False)
@@ -88,10 +89,12 @@ class ServiceRequest(db.Model):
         default='requested',
         nullable=False
     )
+    ProblemDescription = db.Column(db.Text, nullable=True)
     Remarks = db.Column(db.Text, nullable=True)
 
     # Relationships
     service = db.relationship('Service', backref=db.backref('service_requests', cascade='all, delete', lazy=True))
+    category = db.relationship('ServiceCategory', backref=db.backref('service_requests', lazy=True))
     customer = db.relationship('User', foreign_keys=[CustomerID], backref=db.backref('customer_requests', lazy=True))
     professional = db.relationship('User', foreign_keys=[ProfessionalID], backref=db.backref('assigned_requests', lazy=True))
 

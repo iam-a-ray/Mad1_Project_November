@@ -1,22 +1,90 @@
 {% extends "layout.html" %}
 
-{% block title %}Add Service Request{% endblock %}
+{% block title %}
+    Add Service Request
+{% endblock %}
+
+{% block style %}
+<style>
+    .form-container {
+        margin-top: 20px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-label {
+        font-weight: bold;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .btn-submit {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-submit:hover {
+        background-color: #218838;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <h1>Add Service Request</h1>
-    <form method="POST" action="{{ url_for('add_service_request') }}">
+<div class="form-container">
+    <h1 class="display-4">Add Service Request</h1>
+    <form action="{{ url_for('add_service_request') }}" method="post" class="form">
         <div class="form-group">
-            <label for="service_id">Service</label>
-            <select id="service_id" name="service_id">
+            <label for="category_id" class="form-label">Category:</label>
+            <select name="category_id" id="category_id" class="form-control">
+                <option value="">Select a category</option>
+                {% for category in categories %}
+                    <option value="{{ category.CategoryID }}">{{ category.Name }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="new_category" id="new_category" class="form-control" placeholder="Or add a new category">
+        </div>
+        <div class="form-group">
+            <label for="service_id" class="form-label">Service:</label>
+            <select name="service_id" id="service_id" class="form-control">
+                <option value="">Select a service</option>
                 {% for service in services %}
                     <option value="{{ service.ServiceID }}">{{ service.ServiceName }}</option>
                 {% endfor %}
             </select>
+            <input type="text" name="new_service" id="new_service" class="form-control" placeholder="Or add a new service">
         </div>
         <div class="form-group">
-            <label for="additional_info">Additional Information</label>
-            <textarea id="additional_info" name="additional_info"></textarea>
+            <label for="base_price" class="form-label">Base Price:</label>
+            <input type="number" name="base_price" id="base_price" class="form-control" placeholder="Enter base price" required>
         </div>
-        <button type="submit">Add Service Request</button>
+        <div class="form-group">
+            <label for="time_required" class="form-label">Time Required (minutes):</label>
+            <input type="number" name="time_required" id="time_required" class="form-control" placeholder="Enter time required" required>
+        </div>
+        <div class="form-group">
+            <label for="pincode" class="form-label">Pincode:</label>
+            <input type="text" name="pincode" id="pincode" class="form-control" placeholder="Enter pincode" value="{{ user.Pincode }}" required>
+        </div>
+        <div class="form-group">
+            <label for="problem_description" class="form-label">Problem Description:</label>
+            <textarea name="problem_description" id="problem_description" class="form-control" rows="4"></textarea>
+        </div>
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-plus"></i> Add Service Request
+        </button>
     </form>
+</div>
 {% endblock %}

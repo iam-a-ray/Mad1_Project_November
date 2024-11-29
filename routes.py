@@ -260,10 +260,10 @@ def customer_dashboard(user):
     )
 
 
-@app.route("/admin_dashboard")
-@admin_required
-def admin_dashboard(user):
-    return render_template("admin/admin_dashboard.html", user=user)
+# @app.route("/admin_dashboard")
+# @admin_required
+# def admin_dashboard(user):
+#     return render_template("admin/admin_dashboard.html", user=user)
 
 
 @app.route("/professional_dashboard")
@@ -501,6 +501,31 @@ def logout():
     flash("You have been logged out")
     return redirect(url_for("login"))
 
+@app.route("/admin_dashboard")
+@admin_required
+def admin_dashboard(user):
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+    return render_template("admin/admin_dashboard.html", user=user)
+
+@app.route("/view_users")
+@admin_required
+def view_users():
+    users = User.query.all()
+    return render_template("admin/view_users.html", users=users)
+
+@app.route("/approve_professionals")
+@admin_required
+def approve_professionals():
+    professionals = User.query.filter_by(isProfessional=True, isApproved=False).all()
+    return render_template("admin/approve_professionals.html", professionals=professionals)
+
+@app.route("/block_users")
+@admin_required
+def block_users():
+    users = User.query.all()
+    return render_template("admin/block_users.html", users=users)
+
 @app.route("/admin/service/add", methods=["GET", "POST"])
 @admin_required
 def add_service():
@@ -512,7 +537,14 @@ def add_service():
         category_id = request.form.get("category_id")
         pincode = request.form.get("pincode")
 
-        service = Service(ServiceName=service_name, Description=description, BasePrice=base_price, TimeRequired=time_required, CategoryID=category_id, Pincode=pincode)
+        service = Service(
+            ServiceName=service_name,
+            Description=description,
+            BasePrice=base_price,
+            TimeRequired=time_required,
+            CategoryID=category_id,
+            Pincode=pincode
+        )
         db.session.add(service)
         db.session.commit()
 
@@ -520,7 +552,7 @@ def add_service():
         return redirect(url_for("view_services"))
 
     categories = ServiceCategory.query.all()
-    return render_template("service/add.html", categories=categories)
+    return render_template("admin/add_service.html", categories=categories)
 
 @app.route("/admin/service/edit/<int:service_id>", methods=["GET", "POST"])
 @admin_required
@@ -539,13 +571,7 @@ def edit_service(service_id):
         return redirect(url_for("view_services"))
 
     categories = ServiceCategory.query.all()
-    return render_template("service/edit.html", service=service, categories=categories)
-
-@app.route("/admin/services")
-@admin_required
-def view_services():
-    services = Service.query.all()
-    return render_template("service/view.html", services=services)
+    return render_template("admin/edit_service.html", service=service, categories=categories)
 
 @app.route("/admin/service/delete/<int:service_id>", methods=["POST"])
 @admin_required
@@ -557,27 +583,61 @@ def delete_service(service_id):
     flash("Service deleted successfully")
     return redirect(url_for("view_services"))
 
+@app.route("/admin/services")
+@admin_required
+def view_services():
+    services = Service.query.all()
+    return render_template("admin/view_services.html", services=services)
+
 @app.route("/service_request/add", methods=["GET", "POST"])
 @auth_required
 def add_service_request():
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+
     if request.method == "POST":
         service_id = request.form.get("service_id")
         category_id = request.form.get("category_id")
+        new_category = request.form.get("new_category")
+        new_service = request.form.get("new_service")
+        base_price = request.form.get("base_price")
+        time_required = request.form.get("time_required")
+        pincode = request.form.get("pincode")
         problem_description = request.form.get("problem_description")
-        additional_info = request.form.get("additional_info")
-        user_id = session["user_id"]
 
-        # Check if the category exists, if not create it
-        category = ServiceCategory.query.get(category_id)
-        if not category:
-            flash("Selected category does not exist.")
-            return redirect(url_for("add_service_request"))
+
+        # Handle new category
+        if new_category:
+            existing_category = ServiceCategory.query.filter_by(Name=new_category).first()
+            if existing_category:
+                category_id = existing_category.CategoryID
+            else:
+                category = ServiceCategory(Name=new_category)
+                db.session.add(category)
+                db.session.commit()
+                category_id = category.CategoryID
+
+        # Handle new service
+        if new_service:
+            existing_service = Service.query.filter_by(ServiceName=new_service).first()
+            if existing_service:
+                service_id = existing_service.ServiceID
+            else:
+                service = Service(
+                    ServiceName=new_service,
+                    BasePrice=base_price,
+                    TimeRequired=time_required,
+                    CategoryID=category_id,
+                    Pincode=pincode
+                )
+                db.session.add(service)
+                db.session.commit()
+                service_id = service.ServiceID
 
         service_request = ServiceRequest(
             ServiceID=service_id,
             CategoryID=category_id,
             ProblemDescription=problem_description,
-            AdditionalInfo=additional_info,
             CustomerID=user_id,
             DateOfRequest=datetime.utcnow()
         )
@@ -589,7 +649,7 @@ def add_service_request():
 
     services = Service.query.all()
     categories = ServiceCategory.query.all()
-    return render_template("service_request/add.html", services=services, categories=categories)
+    return render_template("service_request/add.html", services=services, categories=categories, user=user)
 
 @app.route("/service_request/edit/<int:request_id>", methods=["GET", "POST"])
 @auth_required
@@ -601,6 +661,10 @@ def edit_service_request(request_id):
 
     if request.method == "POST":
         service_request.ServiceID = request.form.get("service_id")
+        service_request.service.BasePrice = request.form.get("base_price")
+        service_request.service.TimeRequired = request.form.get("time_required")
+        service_request.service.Pincode = request.form.get("pincode")
+        service_request.ProblemDescription = request.form.get("problem_description")
         service_request.AdditionalInfo = request.form.get("additional_info")
         db.session.commit()
 

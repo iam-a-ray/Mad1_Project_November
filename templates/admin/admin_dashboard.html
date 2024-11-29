@@ -3,17 +3,69 @@
 Admin Dashboard
 {% endblock %}
 
+{% block style %}
+<style>
+    .dashboard-container {
+        margin-top: 20px;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-{% include 'sidebar.html'   %}
-<div class="d-flex">
-    <!-- Main Content -->
-    <div id="page-content-wrapper" class="w-100 p-4">
-        <div class="container mt-5">
-            <h2 class="text-center">Admin Dashboard</h2>
-            <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{user.Username}}" alt="avatar" width="100"/>
-            <p class="text-center">Welcome, {{ user.Username }}!</p>
-            <p class="text-center">You are logged in as an Admin.</p>
-        </div>
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Admin Dashboard</h2>
+        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{ user.Username }}" alt="avatar" width="100"/>
+        <p>Welcome, {{ user.Username }}!</p>
+        <p>You are logged in as an Admin.</p>
+    </div>
+
+    <div class="dashboard-section">
+        <h3>Manage Users</h3>
+        <a href="{{ url_for('view_users') }}" class="btn btn-primary">View Users</a>
+        <a href="{{ url_for('approve_professionals') }}" class="btn btn-primary">Approve Professionals</a>
+        <a href="{{ url_for('block_users') }}" class="btn btn-danger">Block Users</a>
+    </div>
+
+    <div class="dashboard-section">
+        <h3>Service Management</h3>
+        <a href="{{ url_for('add_service') }}" class="btn btn-primary">Add Service</a>
+        <a href="{{ url_for('view_services') }}" class="btn btn-primary">View Services</a>
     </div>
 </div>
 {% endblock %}
