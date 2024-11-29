@@ -450,41 +450,40 @@ def updateCustomerInfo_post(user):
             return redirect(url_for("updateCustomerInfo"))
         else:
             user.Passhash = generate_password_hash(new_password)
-
     # Commit the changes to the database
     db.session.commit()
     flash("Profile updated successfully")
     return redirect(url_for("customer_dashboard"))
 
-@app.route("/flag_user")
-@admin_required
-def flag_user(user):
-    flagged_users = FlaggedUser.query.all()
-    return render_template(
-        "admin/flag_user.html", user=user, flagged_users=flagged_users
-    )
+# @app.route("/flag_user")
+# @admin_required
+# def flag_user(user):
+#     flagged_users = FlaggedUser.query.all()
+#     return render_template(
+#         "admin/flag_user.html", user=user, flagged_users=flagged_users
+#     )
 
-@app.route("/flag_user", methods=["POST"])
-@admin_required
-def flag_user_post(user):
-    username = request.form.get("username")
-    reason = request.form.get("reason")
+# @app.route("/flag_user", methods=["POST"])
+# @admin_required
+# def flag_user_post(user):
+#     username = request.form.get("username")
+#     reason = request.form.get("reason")
 
-    if not username or not reason:
-        flash("Please fill all fields")
-        return redirect(url_for("flag_user"))
+#     if not username or not reason:
+#         flash("Please fill all fields")
+#         return redirect(url_for("flag_user"))
 
-    user = User.query.filter_by(Username=username).first()
-    if not user:
-        flash("User not found")
-        return redirect(url_for("flag_user"))
+#     user = User.query.filter_by(Username=username).first()
+#     if not user:
+#         flash("User not found")
+#         return redirect(url_for("flag_user"))
 
-    flagged_user = FlaggedUser(UserID=user.UserID, Reason=reason)
-    db.session.add(flagged_user)
-    db.session.commit()
+#     flagged_user = FlaggedUser(UserID=user.UserID, Reason=reason)
+#     db.session.add(flagged_user)
+#     db.session.commit()
 
-    flash("User flagged successfully")
-    return redirect(url_for("flag_user"))
+#     flash("User flagged successfully")
+#     return redirect(url_for("flag_user"))
 
 @app.route("/profile")
 @auth_required
@@ -504,31 +503,29 @@ def logout():
 @app.route("/admin_dashboard")
 @admin_required
 def admin_dashboard(user):
-    user_id = session["user_id"]
-    user = User.query.get(user_id)
     return render_template("admin/admin_dashboard.html", user=user)
 
 @app.route("/view_users")
 @admin_required
-def view_users():
+def view_users(user):
     users = User.query.all()
-    return render_template("admin/view_users.html", users=users)
+    return render_template("admin/view_users.html", users=users, user=user)
 
 @app.route("/approve_professionals")
 @admin_required
-def approve_professionals():
+def approve_professionals(user):
     professionals = User.query.filter_by(isProfessional=True, isApproved=False).all()
-    return render_template("admin/approve_professionals.html", professionals=professionals)
+    return render_template("admin/approve_professionals.html", professionals=professionals, user=user)
 
 @app.route("/block_users")
 @admin_required
-def block_users():
+def block_users(current_user):
     users = User.query.all()
-    return render_template("admin/block_users.html", users=users)
+    return render_template("admin/block_users.html", users=users, current_user=current_user)
 
 @app.route("/admin/service/add", methods=["GET", "POST"])
 @admin_required
-def add_service():
+def add_service(user):
     if request.method == "POST":
         service_name = request.form.get("service_name")
         description = request.form.get("description")
@@ -552,11 +549,11 @@ def add_service():
         return redirect(url_for("view_services"))
 
     categories = ServiceCategory.query.all()
-    return render_template("admin/add_service.html", categories=categories)
+    return render_template("admin/add_service.html", categories=categories, user=user)
 
 @app.route("/admin/service/edit/<int:service_id>", methods=["GET", "POST"])
 @admin_required
-def edit_service(service_id):
+def edit_service(user, service_id):
     service = Service.query.get_or_404(service_id)
     if request.method == "POST":
         service.ServiceName = request.form.get("service_name")
@@ -571,11 +568,11 @@ def edit_service(service_id):
         return redirect(url_for("view_services"))
 
     categories = ServiceCategory.query.all()
-    return render_template("admin/edit_service.html", service=service, categories=categories)
+    return render_template("admin/edit_service.html", service=service, categories=categories, user=user)
 
 @app.route("/admin/service/delete/<int:service_id>", methods=["POST"])
 @admin_required
-def delete_service(service_id):
+def delete_service(user, service_id):
     service = Service.query.get_or_404(service_id)
     db.session.delete(service)
     db.session.commit()
@@ -585,9 +582,9 @@ def delete_service(service_id):
 
 @app.route("/admin/services")
 @admin_required
-def view_services():
+def view_services(user):
     services = Service.query.all()
-    return render_template("admin/view_services.html", services=services)
+    return render_template("admin/view_services.html", services=services, user=user)
 
 @app.route("/service_request/add", methods=["GET", "POST"])
 @auth_required
@@ -696,3 +693,46 @@ def delete_service_request(request_id):
 
     flash("Service request deleted successfully")
     return redirect(url_for("view_service_requests"))
+
+@app.route("/approve_professional/<int:user_id>", methods=["POST"])
+@admin_required
+def approve_professional(user, user_id):
+    professional = User.query.get_or_404(user_id)
+    if professional.isProfessional and not professional.isApproved:
+        professional.isApproved = True
+        db.session.commit()
+        flash("Professional approved successfully", "success")
+    else:
+        flash("Invalid operation", "danger")
+    return redirect(url_for("approve_professionals"))
+
+@app.route("/edit_user/<int:user_id>", methods=["GET", "POST"])
+@admin_required
+def edit_user(user, user_id):
+    user_to_edit = User.query.get_or_404(user_id)
+    if request.method == "POST":
+        user_to_edit.Username = request.form.get("username")
+        user_to_edit.Name = request.form.get("name")
+        user_to_edit.Email = request.form.get("email")
+        role = request.form.get("role")
+        user_to_edit.isAdmin = role == "admin"
+        user_to_edit.isProfessional = role == "professional"
+        user_to_edit.isCustomer = role == "customer"
+        user_to_edit.isApproved = request.form.get("isApproved") == "true"
+        db.session.commit()
+
+        flash("User updated successfully")
+        return redirect(url_for("view_users"))
+
+    return render_template("admin/edit_users.html", user_to_edit=user_to_edit, user=user)
+
+
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
+@admin_required
+def delete_user(current_user, user_id):
+    user_to_delete = User.query.get_or_404(user_id)
+    db.session.delete(user_to_delete)
+    db.session.commit()
+
+    flash("User deleted successfully")
+    return redirect(url_for("view_users"))

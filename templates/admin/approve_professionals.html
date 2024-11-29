@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% block title %}Approve Professionals{% endblock %}
+
+{% block style %}
+<style>
+    .table-container {
+        margin-top: 20px;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+    .btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-approve {
+        background-color: #28a745;
+        color: white;
+    }
+    .btn-approve:hover {
+        background-color: #218838;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <h1>Approve Professionals</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for professional in professionals %}
+                <tr>
+                    <td>{{ professional.Username }}</td>
+                    <td>{{ professional.Name }}</td>
+                    <td>{{ professional.Email }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('approve_professional', user_id=professional.UserID) }}" class="form-inline">
+                            <button type="submit" class="btn btn-approve">Approve</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

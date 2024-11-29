@@ -1,0 +1,101 @@
+{% extends 'layout.html' %}
+{% block title %}
+Professional Dashboard
+{% endblock %}
+
+{% block style %}
+<style>
+    .dashboard-container {
+        margin-top: 20px;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-label {
+        font-weight: bold;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .btn-submit {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-submit:hover {
+        background-color: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Professional Dashboard</h2>
+        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{ user.Username }}" alt="avatar" width="100"/>
+        <p>Welcome, {{ user.Username }}!</p>
+        <p>You are logged in as a Professional.</p>
+    </div>
+
+    <div class="dashboard-section">
+        <h3>Search Services by Category</h3>
+        <form action="{{ url_for('search_services') }}" method="GET" class="form">
+            <div class="form-group">
+                <label for="category_id" class="form-label">Category</label>
+                <select id="category_id" name="category_id" class="form-control">
+                    {% for category in categories %}
+                        <option value="{{ category.CategoryID }}">{{ category.Name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-submit">Search</button>
+        </form>
+    </div>
+
+    <div class="dashboard-section">
+        <h3>Services in Your Profession</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Service Name</th>
+                    <th>Description</th>
+                    <th>Base Price</th>
+                    <th>Time Required</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in services %}
+                    <tr>
+                        <td>{{ service.ServiceName }}</td>
+                        <td>{{ service.Description }}</td>
+                        <td>{{ service.BasePrice }}</td>
+                        <td>{{ service.TimeRequired }}</td>
+                        <td>{{ service.category.Name }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

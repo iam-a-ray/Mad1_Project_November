@@ -25,6 +25,7 @@ class User(db.Model):
     Profession = db.Column(db.String(100), nullable=True)
     Reviews = db.Column(db.Text, nullable=True)
     Rating = db.Column(db.Float)
+    isApproved = db.Column(db.Boolean, nullable=False, default=False)
 
     def set_password(self, password):
         """Hash and set the user's password."""

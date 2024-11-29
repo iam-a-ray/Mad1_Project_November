@@ -47,7 +47,7 @@ Update Admin Profile
 {% block content %}
 <div class="form-container">
     <h1 class="display-4">Update Profile</h1>
-    <form action="{{ url_for('update_admin_info') }}" method="POST" class="form"> 
+    <form action="{{ url_for('updateAdminInfo') }}" method="POST" class="form"> 
         <div class="form-group">
             <label for="username" class="form-label">New Username</label>
             <input type="text" class="form-control" id="username" name="username" value="{{ user.Username }}" required>

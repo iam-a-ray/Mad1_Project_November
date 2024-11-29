@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block title %}View Users{% endblock %}
+
+{% block style %}
+<style>
+    .table-container {
+        margin-top: 20px;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+    .btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-edit {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-edit:hover {
+        background-color: #0056b3;
+    }
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+    .form-inline {
+        display: inline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <h1>Users</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.Username }}</td>
+                    <td>{{ user.Name }}</td>
+                    <td>{{ user.Email }}</td>
+                    <td>
+                        {% if user.isAdmin %}
+                            Admin
+                        {% elif user.isProfessional %}
+                            Professional
+                        {% elif user.isCustomer %}
+                            Customer
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('edit_user', user_id=user.UserID) }}" class="btn btn-edit">Edit</a>
+                        <form method="POST" action="{{ url_for('delete_user', user_id=user.UserID) }}" class="form-inline">
+                            <button type="submit" class="btn btn-delete">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

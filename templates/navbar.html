@@ -21,9 +21,17 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{url_for('updateAdminInfo')}}">Update Information</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Manage Users</a>
-                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Manage
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('view_users') }}">View Users</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('view_services') }}">View Services</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_service') }}">Add Service</a></li>
+                            <li><a class="dropdown-item" href="#">Blocked Users</a>
+                            </li>
+                    </ul>
                 {% endif %}
                 
                 {% if session.get('role') == 'professional' %}
