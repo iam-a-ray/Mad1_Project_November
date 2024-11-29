@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% block title %}
+Customer Dashboard
+{% endblock %}
+
+{% block style %}
+<style>
+    .dashboard-summary {
+        margin-top: 20px;
+    }
+    .dashboard-actions {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-summary">
+    <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{ user.Username }}" alt="avatar" width="100"/>
+    <h2>Welcome, {{ user.Name }}</h2>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Services</h5>
+                    <p class="card-text">{{ total_services }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Active Services</h5>
+                    <p class="card-text">{{ active_services }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Budget Spent</h5>
+                    <p class="card-text">₹{{ total_budget_spent }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Customer Rating</h5>
+                    <p class="card-text">{{ customer_rating }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-actions">
+    <h3>Service Requests</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Date of Request</th>
+                <th>Completion Date</th>
+                <th>Assigned Professional</th>
+                <th>Status</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in service_requests %}
+                <tr>
+                    <td>{{ request.service.Name }}</td>
+                    <td>{{ request.DateOfRequest }}</td>
+                    <td>{{ request.DateOfCompletion or "Pending" }}</td>
+                    <td>{{ service_professionals[request.RequestID] }}</td>
+                    <td>{{ request.Status|capitalize }}</td>
+                    <td>{{ request.Remarks or "N/A" }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

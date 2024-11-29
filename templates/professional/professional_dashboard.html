@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block title %}
-Influencer Dashboard
+Professional Dashboard
 {% endblock %}
 
 {% block style %}
@@ -22,7 +22,7 @@ Influencer Dashboard
 <div class="dashboard-summary">
     <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{user.Username}}" alt="avatar" width="100"/>
     <h2>Welcome, {{ user.Name }}</h2>
-    {% if campaigns %}
+    {% if services %}
     <table class="table table-striped">
         <thead>
             <tr>
@@ -36,27 +36,27 @@ Influencer Dashboard
             </tr>
         </thead>
         <tbody>
-            {% for campaign in campaigns %}
+            {% for service in services %}
             <tr>
-                <td>{{ campaign.Name }}</td>
-                <td>{{ campaign.Description }}</td>
-                <td>{{ campaign.StartDate }}</td>
-                <td>{{ campaign.EndDate }}</td>
+                <td>{{ service.Name }}</td>
+                <td>{{ service.Description }}</td>
+                <td>{{ service.StartDate }}</td>
+                <td>{{ service.EndDate }}</td>
                 <td>
-                    {% if campaign.Status %}
+                    {% if service.Status %}
                         Active
                     {% else %}
                         Completed
                     {% endif %}
                 </td>
-                <td>₹{{ campaign.Budget }}</td>
+                <td>₹{{ service.Budget }}</td>
                 <td>
-                    {% if campaign.Status == false %}
+                    {% if service.Status == false %}
                     <div class="action-buttons">
-                        <form method="POST" action="{{ url_for('accept_campaign', campaign_id=campaign.id) }}">
+                        <form method="POST" action="{{ url_for('accept_service', service_id=service.id) }}">
                             <button type="submit" class="btn btn-success">Accept</button>
                         </form>
-                        <form method="POST" action="{{ url_for('reject_campaign', campaign_id=campaign.id) }}">
+                        <form method="POST" action="{{ url_for('reject_service', service_id=service.id) }}">
                             <button type="submit" class="btn btn-danger">Reject</button>
                         </form>
                     </div>
@@ -67,6 +67,6 @@ Influencer Dashboard
         </tbody>
     </table>
     {% else %}
-        <p>No campaigns assigned to you yet.</p>
+        <p>No services assigned to you yet.</p>
     {% endif %}
 {% endblock %}

@@ -20,8 +20,9 @@ class User(db.Model):
     isCustomer = db.Column(db.Boolean, nullable=False, default=False)
     isProfessional = db.Column(db.Boolean, nullable=False, default=False)
     Address = db.Column(db.String(200), nullable=True)
-    Experience = db.Column(db.String(100), nullable=True)  # For professionals only
-    Profession = db.Column(db.String(100), nullable=True)  # Professional's expertise
+    Pincode = db.Column(db.String(6), nullable=True, index=True)
+    Experience = db.Column(db.String(100), nullable=True)
+    Profession = db.Column(db.String(100), nullable=True)
     Reviews = db.Column(db.Text, nullable=True)
     Rating = db.Column(db.Float)
 
@@ -36,6 +37,20 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.Username}>'
 
+class ServiceCategory(db.Model):
+    """
+    Represents categories for grouping services.
+    """
+    __tablename__ = 'service_category'
+    CategoryID = db.Column(db.Integer, primary_key=True)
+    Name = db.Column(db.String(100), unique=True, nullable=False)
+    Description = db.Column(db.Text, nullable=True)
+    services = db.relationship('Service', backref='category', lazy=True)
+
+    def __repr__(self):
+        return f'<ServiceCategory {self.Name}>'
+
+
 # Service model for available household services
 class Service(db.Model):
     """
@@ -43,13 +58,16 @@ class Service(db.Model):
     """
     __tablename__ = 'service'
     ServiceID = db.Column(db.Integer, primary_key=True)
-    Name = db.Column(db.String(100), nullable=False, unique=True)
+    ServiceName = db.Column(db.String(100), nullable=False, unique=True)
     Description = db.Column(db.Text, nullable=True)
     BasePrice = db.Column(db.Float, nullable=False)
-    TimeRequired = db.Column(db.Integer, nullable=False)  # Time required in minutes
+    TimeRequired = db.Column(db.Integer, nullable=False)
+    CategoryID = db.Column(db.Integer, db.ForeignKey('service_category.CategoryID'), nullable=True)
+    Pincode = db.Column(db.String(6), nullable=False, index=True)
 
     def __repr__(self):
-        return f'<Service {self.Name}>'
+        return f'<Service {self.ServiceName}>'
+
 
 # ServiceRequest model for tracking customer service requests
 class ServiceRequest(db.Model):
@@ -80,6 +98,46 @@ class ServiceRequest(db.Model):
     def __repr__(self):
         return f'<ServiceRequest {self.RequestID}>'
 
+
+# Transaction model for storing transaction details
+class Transaction(db.Model):
+    """
+    Represents a transaction for a customer.
+    """
+    __tablename__ = 'transaction'
+    TransactionID = db.Column(db.Integer, primary_key=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
+    Timestamp = db.Column(db.DateTime, default=db.func.now(), nullable=False)
+    TotalAmount = db.Column(db.Float, nullable=False)
+
+    # Relationships
+    user = db.relationship('User', backref=db.backref('transactions', lazy=True))
+
+    def __repr__(self):
+        return f'<Transaction {self.TransactionID}>'
+
+
+# Order model for storing order details
+class Order(db.Model):
+    """
+    Represents an individual order linked to a transaction and a service.
+    """
+    __tablename__ = 'order'
+    OrderID = db.Column(db.Integer, primary_key=True)
+    TransactionID = db.Column(db.Integer, db.ForeignKey('transaction.TransactionID'), nullable=False)
+    ServiceID = db.Column(db.Integer, db.ForeignKey('service.ServiceID'), nullable=False)
+    Quantity = db.Column(db.Integer, nullable=False)
+    UnitPrice = db.Column(db.Float, nullable=False)
+    TotalPrice = db.Column(db.Float, nullable=False)
+
+    # Relationships
+    transaction = db.relationship('Transaction', backref=db.backref('orders', lazy=True, cascade='all, delete-orphan'))
+    service = db.relationship('Service', backref=db.backref('orders', lazy=True))
+
+    def __repr__(self):
+        return f'<Order {self.OrderID}>'
+
+
 # FlaggedUser model for tracking flagged users
 class FlaggedUser(db.Model):
     """
@@ -95,6 +153,7 @@ class FlaggedUser(db.Model):
 
     def __repr__(self):
         return f'<FlaggedUser {self.FlaggedUserID}>'
+
 
 # Initialize database and add admin user if not already present
 with app.app_context():

@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, session, abort
 from app import app
-from models import db, User, Service, ServiceRequest, FlaggedUser
+from models import db, User, Service, ServiceRequest, FlaggedUser, ServiceCategory,Order,Transaction  
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
@@ -17,7 +17,6 @@ def auth_required(f):
 
     return decorated_function
 
-
 # Decorator to check if the user is an professional
 def professional_required(f):
     @wraps(f)
@@ -30,7 +29,6 @@ def professional_required(f):
         return f(user=user, *args, **kwargs)
 
     return decorated_function
-
 
 # Decorator to check if the user is a customer
 def customer_required(f):
@@ -45,7 +43,6 @@ def customer_required(f):
 
     return decorated_function
 
-
 # Decorator to check if the user is an admin
 def admin_required(f):
     @wraps(f)
@@ -59,16 +56,13 @@ def admin_required(f):
 
     return decorated_function
 
-
 @app.route("/househelp")
 def househelp():
     return render_template("househelp.html")
 
-
 @app.route("/login")
 def login():
     return render_template("login.html")
-
 
 @app.route("/login", methods=["POST"])
 def login_post():
@@ -115,7 +109,7 @@ def registerAsCustomer():
 
 
 @app.route("/registerAsProfessional", methods=["POST"])
-def registerAsProfessional_post():
+def registerAsProfessional():
     name = request.form.get("name")
     username = request.form.get("username")
     password = request.form.get("password")
@@ -123,8 +117,9 @@ def registerAsProfessional_post():
     email = request.form.get("email")
     phone = request.form.get("phone")
     address = request.form.get("address")
-    servicetype = request.form.get("servicetype")
+    profession = request.form.get("profession")
     experience = request.form.get("experience")
+    pincode = request.form.get("pincode")
 
     if (
         not name
@@ -134,8 +129,9 @@ def registerAsProfessional_post():
         or not email
         or not phone
         or not address
-        or not servicetype
+        or not profession
         or not experience
+        or not pincode
     ):
         flash("All fields are required")
         return redirect(url_for("registerAsProfessional"))
@@ -157,9 +153,10 @@ def registerAsProfessional_post():
         Email=email,
         Phone=phone,
         Address=address,
-        Servicetype=servicetype,
+        Profession=profession,
         Experience=experience,
         isProfessional=True,
+        Pincode=pincode,
     )
     db.session.add(new_user)
     db.session.commit()
@@ -175,6 +172,7 @@ def registerAsCustomer_post():
     email = request.form.get("email")
     phone = request.form.get("phone")
     address = request.form.get("address")
+    pincode = request.form.get("pincode")
 
     if (
         not name
@@ -184,6 +182,7 @@ def registerAsCustomer_post():
         or not email
         or not phone
         or not address
+        or not pincode
     ):
         flash("All fields are required")
         return redirect(url_for("registerAsCustomer"))
@@ -205,12 +204,12 @@ def registerAsCustomer_post():
         Email=email,
         Address=address,
         Phone=phone,
+        Pincode=pincode,
         isCustomer=True,
     )
     db.session.add(new_user)
     db.session.commit()
     return redirect(url_for("login"))
-
 
 @app.route("/customer_dashboard")
 @customer_required
@@ -219,67 +218,43 @@ def customer_dashboard(user):
 
     today = date.today()
 
-    # Fetch all services for this sponsor
-    services = Service.query.filter_by(CustomerID=user.UserID).all()
+    # Fetch all service requests made by the customer
+    service_requests = ServiceRequest.query.filter_by(CustomerID=user.UserID).all()
 
-    # Calculate the total number of services
-    total_services = len(services)
-
-    # Calculate the total budget spent
-    total_budget_spent = sum(service.Budget for service in services)
-
-    # Calculate the total number of active services
+    # Calculate total services, active services, and total budget
+    total_services = len(service_requests)
+    total_budget_spent = sum(
+        request.service.BasePrice for request in service_requests if request.service
+    )
     active_services = sum(
-        1 for service in services if service.StartDate <= today <= service.EndDate
+        1 for request in service_requests if request.Status == 'assigned'
     )
 
-    ad_requests = (
-        ServiceRequest.query.join(Service).filter(Service.CustomerID == user.UserID).all()
-    )
-    valid_ratings = [
-        service_request.Rating for service_request in ad_requests if service_request.Rating is not None
+    # Calculate customer rating from completed requests
+    completed_requests = [
+        request for request in service_requests if request.Status == 'closed'
     ]
-    total_rating = sum(valid_ratings)
-    sponsor_rating = total_rating / len(valid_ratings) if valid_ratings else 0
+    valid_ratings = [
+        request.Rating for request in completed_requests if request.Rating is not None
+    ]
+    customer_rating = sum(valid_ratings) / len(valid_ratings) if valid_ratings else 0
 
-    # Update service ratings based on end date
-    for service_request in ad_requests:
-        days_after_end = (today - service_request.service.EndDate).days
-        if days_after_end > 0:
-            new_rating = max(0, service_request.Rating - days_after_end)
-            service_request.Rating = new_rating
-            db.session.commit()
-
-    # Get professional names associated with each service
+    # Fetch associated professional details
     service_professionals = {}
-    for service in services:
-        service_request = ServiceRequest.query.filter_by(
-            ServiceID=service.ServiceID, Status="accepted"
-        ).first()
-        if service_request:
-            professional = User.query.get(service_request.ProfessionalID)
-            service_professionals[service.ServiceID] = professional.Name
-        else:
-            service_professionals[service.ServiceID] = None
-
-    # Automatically determine the status of each service
-    for service in services:
-        if service.StartDate > today:
-            service.Status = False  # Upcoming (not active)
-        elif service.StartDate <= today <= service.EndDate:
-            service.Status = True  # Active
-        else:
-            service.Status = False  # Completed
-        db.session.commit()
+    for request in service_requests:
+        professional = (
+            User.query.get(request.ProfessionalID) if request.ProfessionalID else None
+        )
+        service_professionals[request.RequestID] = professional.Name if professional else "Not Assigned"
 
     return render_template(
-        "sponsor/customer_dashboard.html",
+        "customer/customer_dashboard.html",
         user=user,
-        services=services,
+        service_requests=service_requests,
         total_services=total_services,
         total_budget_spent=total_budget_spent,
         active_services=active_services,
-        sponsor_rating=sponsor_rating,
+        customer_rating=round(customer_rating, 2),
         today=today,
         service_professionals=service_professionals,
     )
@@ -294,12 +269,12 @@ def admin_dashboard(user):
 @app.route("/professional_dashboard")
 @professional_required
 def professional_dashboard(user):
-    ad_requests = ServiceRequest.query.filter_by(ProfessionalID=user.UserID).all()
-    services = {service_request.service for service_request in ad_requests}
+    service_requests = ServiceRequest.query.filter_by(ProfessionalID=user.UserID).all()
+    services = {service_request.service for service_request in service_requests}
     return render_template(
         "professional/professional_dashboard.html",
         user=user,
-        ad_requests=ad_requests,
+        service_requests=service_requests,
         services=services,
     )
 
@@ -369,13 +344,13 @@ def updateAdminInfo_post(user):
 
 @app.route("/updateProfessionalInfo")
 @professional_required
-def updateInfInfo(user):
+def updateProfessionalInfo(user):
     return render_template("professional/updateProfessionalInfo.html", user=user)
 
 
 @app.route("/updateProfessionalInfo", methods=["POST"])
 @professional_required
-def updateInfInfo_post(user):
+def updateProfessionalInfo_post(user):
     name = request.form.get("name")
     username = request.form.get("username")
     email = request.form.get("email")
@@ -386,11 +361,12 @@ def updateInfInfo_post(user):
     address = request.form.get("address")
     experience = request.form.get("experience")
     profession = request.form.get("profession")
+    pincode= request.form.get("pincode")
 
     # Verify the current password
     if not check_password_hash(user.Passhash, password):
         flash("Incorrect password")
-        return redirect(url_for("updateInfInfo"))
+        return redirect(url_for("updateProfessionalInfo"))
 
     # Update only the fields that have been filled in
     if name:
@@ -399,7 +375,7 @@ def updateInfInfo_post(user):
         existing_user = User.query.filter(User.Username == username).first()
         if existing_user and existing_user.UserID != user.UserID:
             flash("Username already exists")
-            return redirect(url_for("updateInfInfo"))
+            return redirect(url_for("updateProfessionalInfo"))
         user.Username = username
     if email:
         user.Email = email
@@ -411,10 +387,12 @@ def updateInfInfo_post(user):
         user.Experience = experience
     if profession:
         user.Profession = profession
+    if pincode:
+        user.Pincode = pincode
     if new_password:
         if new_password != confirm_password:
             flash("Passwords do not match")
-            return redirect(url_for("updateInfInfo"))
+            return redirect(url_for("updateProfessionalInfo"))
         else:
             user.Passhash = generate_password_hash(new_password)
 
@@ -442,6 +420,7 @@ def updateCustomerInfo_post(user):
     confirm_password = request.form.get("confirm_password")
     address = request.form.get("address")
     phone = request.form.get("phone")
+    pincode = request.form.get("pincode")
 
     # Verify the current password
     if not check_password_hash(user.Passhash, password):
@@ -463,6 +442,8 @@ def updateCustomerInfo_post(user):
         user.Address = address
     if phone:
         user.Phone = phone
+    if pincode:
+        user.Pincode = pincode
     if new_password:
         if new_password != confirm_password:
             flash("Passwords do not match")
@@ -475,7 +456,6 @@ def updateCustomerInfo_post(user):
     flash("Profile updated successfully")
     return redirect(url_for("customer_dashboard"))
 
-
 @app.route("/flag_user")
 @admin_required
 def flag_user(user):
@@ -483,7 +463,6 @@ def flag_user(user):
     return render_template(
         "admin/flag_user.html", user=user, flagged_users=flagged_users
     )
-
 
 @app.route("/flag_user", methods=["POST"])
 @admin_required
@@ -507,233 +486,6 @@ def flag_user_post(user):
     flash("User flagged successfully")
     return redirect(url_for("flag_user"))
 
-
-@app.route("/create_service")
-@customer_required
-def create_service(user):
-    return render_template("service/add.html", user=user)
-
-
-@app.route("/create_service_requests", methods=["POST"])
-@customer_required
-def create_service_post(user):
-    name = request.form.get("name")
-    description = request.form.get("description")
-    start_date_str = request.form.get("start_date")
-    end_date_str = request.form.get("end_date")
-    budget = request.form.get("budget")
-    visibility = request.form.get("visibility")
-
-    # Convert date strings to date objects
-    start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-    end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-
-    # Create a new service
-    service = Service(
-        Name=name,
-        Description=description,
-        StartDate=start_date,
-        EndDate=end_date,
-        Budget=budget,
-        Visibility=visibility,
-        CustomerID=user.UserID,  # Assuming the sponsor's ID is the user ID
-    )
-
-    db.session.add(service)
-    db.session.commit()
-
-    if visibility == "private":
-        professional_id = request.form.get("professional_id")
-        if not professional_id:
-            flash("Please provide the professional ID")
-            return redirect(url_for("create_service"))
-
-        # Check if the professional ID exists in the database
-        professional = User.query.filter_by(UserID=professional_id).first()
-        if not professional:
-            flash("Influencer not found")
-            return redirect(url_for("create_service"))
-
-        # Create a service request for the targeted professional
-        service_request = ServiceRequest(
-            ServiceID=service.ServiceID,  # Now you can use service.ServiceID
-            ProfessionalID=professional.UserID,
-            Status="pending",
-        )
-
-        db.session.add(service_request)
-        db.session.commit()
-
-        flash("Service request sent to the targeted professional")
-        return redirect(url_for("customer_dashboard"))
-
-    # Flash a success message and redirect to the sponsor dashboard
-    flash("Service created successfully")
-    return redirect(url_for("customer_dashboard"))
-
-    if not (
-        name
-        and description
-        and start_date_str
-        and end_date_str
-        and budget
-        and visibility
-    ):
-        flash("Please fill all fields")
-        return redirect(url_for("create_service"))
-
-    try:
-        # Convert date strings to date objects
-        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-    except ValueError:
-        flash("Invalid date format")
-        return redirect(url_for("create_service"))
-
-    service = Service(
-        Name=name,
-        Description=description,
-        StartDate=start_date,
-        EndDate=end_date,
-        Budget=budget,
-        Visibility=visibility,
-        CustomerID=user.UserID,
-    )
-
-    db.session.add(service)
-    db.session.commit()
-
-    flash("Service created successfully")
-    return redirect(url_for("customer_dashboard"))
-
-
-@app.route("/edit_service_requests/<int:service_id>")
-@customer_required
-def edit_service_requests(user, service_id):
-    service = Service.query.filter_by(ServiceID=service_id).first()
-    return render_template("service/edit.html", user=user, service=service)
-
-
-@app.route("/edit_service/<int:service_id>", methods=["POST"])
-@customer_required
-def edit_service_post(user, service_id):
-    # Get the form data
-    name = request.form.get("name")
-    description = request.form.get("description")
-    start_date_str = request.form.get("start_date")
-    end_date_str = request.form.get("end_date")
-    budget = request.form.get("budget")
-    visibility = request.form.get("visibility")
-    goals = request.form.get("goals")
-    status_str = request.form.get("status")
-
-    # Convert date strings to date objects
-    start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-    end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-    from datetime import date
-
-    # Determine status
-    if status_str == "auto":  # If 'Auto' is selected
-        today = date.today()
-        if start_date > today:
-            status = False  # Upcoming (not active)
-        elif start_date <= today <= end_date:
-            status = True  # Active
-        else:
-            status = False  # Completed
-    else:  # If a specific status is selected
-        status = status_str == "1"
-
-    # Fetch the service from the database
-    service = Service.query.get(service_id)
-    if service is None or service.CustomerID != user.UserID:
-        flash("Service not found or unauthorized access")
-        return redirect(url_for("customer_dashboard"))
-
-    # Update the service details
-    service.Name = name
-    service.Description = description
-    service.StartDate = start_date
-    service.EndDate = end_date
-    service.Budget = budget
-    service.Visibility = visibility
-    service.Goals = goals
-    service.Status = status
-
-    # Commit the changes to the database
-    db.session.commit()
-
-    flash("Service updated successfully")
-    return redirect(url_for("customer_dashboard"))
-
-
-@app.route("/view_services")
-@customer_required
-def view_services(user):
-    services = Service.query.filter_by(CustomerID=user.UserID).all()
-
-    # Fetch service professionals
-    service_professionals = {}
-    for service in services:
-        service_request = ServiceRequest.query.filter_by(
-            ServiceID=service.ServiceID, Status="accepted"
-        ).first()
-        if service_request:
-            professional = User.query.get(service_request.ProfessionalID)
-            service_professionals[service.ServiceID] = professional.Name
-        else:
-            service_professionals[service.ServiceID] = None
-
-    return render_template(
-        "service/view.html",
-        user=user,
-        services=services,
-        service_professionals=service_professionals,  # Pass to the template
-    )
-
-
-@app.route("/delete_service/<int:service_id>")
-@customer_required
-def delete_service(user, service_id):
-    service = Service.query.filter_by(ServiceID=service_id).first()
-    db.session.delete(service)
-    db.session.commit()
-
-    flash("Service deleted successfully")
-    return redirect(url_for("view_services"))
-
-
-@app.route("/view_service")
-@professional_required
-def view_ad_requests(user):
-    service_requests = ServiceRequest.query.filter_by(ProfessionalID=user.UserID).all()
-    return render_template(
-        "negotiation/adRequest.html", user=user, service_requests=service_requests
-    )
-
-
-@app.route("/view_service/<int:request_id>")
-@professional_required
-def view_service_request(user, request_id):
-    service_request = ServiceRequest.query.get_or_404(request_id)
-    if service_request.ProfessionalID != user.UserID:
-        abort(403)
-    return render_template(
-        "negotiation/view_adRequest.html", user=user, service_request_request=service_request
-    )
-
-
-@app.route("/working_service_requests")
-@professional_required
-def working_requests(user):
-    service_requests = ServiceRequest.query.filter_by(
-        ProfessionalID=user.UserID, Status="accepted"
-    ).all()
-    return render_template(
-        "professional/working_service_requests.html", user=user, service_requests=service_requests
-    )
-
-
 @app.route("/profile")
 @auth_required
 def profile():
@@ -749,44 +501,134 @@ def logout():
     flash("You have been logged out")
     return redirect(url_for("login"))
 
-@app.route("/accept_request/<int:request_id>", methods=["POST"])
-@professional_required
-def accept_request(user, request_id):
-    service_request = ServiceRequest.query.get_or_404(request_id)
-    
-    if service_request.ProfessionalID != user.UserID:
-        abort(403)
-    
-    # Update ad request status
-    service_request.Status = "accepted"
-    
-    # Find the associated service
-    service = Service.query.get(service_request.ServiceID)
-    if service:
-        service.ProfessionalID = user.UserID  # Assign professional to the service
-        service.Status = True  # Mark service as active
-    
-    db.session.commit()
-    flash("Request accepted")
-    return redirect(url_for("professional_dashboard"))
+@app.route("/admin/service/add", methods=["GET", "POST"])
+@admin_required
+def add_service():
+    if request.method == "POST":
+        service_name = request.form.get("service_name")
+        description = request.form.get("description")
+        base_price = request.form.get("base_price")
+        time_required = request.form.get("time_required")
+        category_id = request.form.get("category_id")
+        pincode = request.form.get("pincode")
 
-@app.route("/decline_request/<int:request_id>", methods=["POST"])
-@professional_required
-def decline_request(user, request_id):
-    service_request = ServiceRequest.query.get_or_404(request_id)
-    
-    if service_request.ProfessionalID != user.UserID:
-        abort(403)
-    
-    # Update ad request status
-    service_request.Status = "declined"
-    
-    # Remove professional assignment from the service
-    service = Service.query.get(service_request.ServiceID)
-    if service:
-        # Optionally, set the ProfessionalID to None or handle it according to your logic
-        service.ProfessionalID = None
-    
+        service = Service(ServiceName=service_name, Description=description, BasePrice=base_price, TimeRequired=time_required, CategoryID=category_id, Pincode=pincode)
+        db.session.add(service)
+        db.session.commit()
+
+        flash("Service added successfully")
+        return redirect(url_for("view_services"))
+
+    categories = ServiceCategory.query.all()
+    return render_template("service/add.html", categories=categories)
+
+@app.route("/admin/service/edit/<int:service_id>", methods=["GET", "POST"])
+@admin_required
+def edit_service(service_id):
+    service = Service.query.get_or_404(service_id)
+    if request.method == "POST":
+        service.ServiceName = request.form.get("service_name")
+        service.Description = request.form.get("description")
+        service.BasePrice = request.form.get("base_price")
+        service.TimeRequired = request.form.get("time_required")
+        service.CategoryID = request.form.get("category_id")
+        service.Pincode = request.form.get("pincode")
+        db.session.commit()
+
+        flash("Service updated successfully")
+        return redirect(url_for("view_services"))
+
+    categories = ServiceCategory.query.all()
+    return render_template("service/edit.html", service=service, categories=categories)
+
+@app.route("/admin/services")
+@admin_required
+def view_services():
+    services = Service.query.all()
+    return render_template("service/view.html", services=services)
+
+@app.route("/admin/service/delete/<int:service_id>", methods=["POST"])
+@admin_required
+def delete_service(service_id):
+    service = Service.query.get_or_404(service_id)
+    db.session.delete(service)
     db.session.commit()
-    flash("Request declined")
-    return redirect(url_for("professional_dashboard"))
+
+    flash("Service deleted successfully")
+    return redirect(url_for("view_services"))
+
+@app.route("/service_request/add", methods=["GET", "POST"])
+@auth_required
+def add_service_request():
+    if request.method == "POST":
+        service_id = request.form.get("service_id")
+        category_id = request.form.get("category_id")
+        problem_description = request.form.get("problem_description")
+        additional_info = request.form.get("additional_info")
+        user_id = session["user_id"]
+
+        # Check if the category exists, if not create it
+        category = ServiceCategory.query.get(category_id)
+        if not category:
+            flash("Selected category does not exist.")
+            return redirect(url_for("add_service_request"))
+
+        service_request = ServiceRequest(
+            ServiceID=service_id,
+            CategoryID=category_id,
+            ProblemDescription=problem_description,
+            AdditionalInfo=additional_info,
+            CustomerID=user_id,
+            DateOfRequest=datetime.utcnow()
+        )
+        db.session.add(service_request)
+        db.session.commit()
+
+        flash("Service request added successfully")
+        return redirect(url_for("view_service_requests"))
+
+    services = Service.query.all()
+    categories = ServiceCategory.query.all()
+    return render_template("service_request/add.html", services=services, categories=categories)
+
+@app.route("/service_request/edit/<int:request_id>", methods=["GET", "POST"])
+@auth_required
+def edit_service_request(request_id):
+    service_request = ServiceRequest.query.get_or_404(request_id)
+    if service_request.CustomerID != session["user_id"]:
+        flash("You do not have permission to edit this service request")
+        return redirect(url_for("view_service_requests"))
+
+    if request.method == "POST":
+        service_request.ServiceID = request.form.get("service_id")
+        service_request.AdditionalInfo = request.form.get("additional_info")
+        db.session.commit()
+
+        flash("Service request updated successfully")
+        return redirect(url_for("view_service_requests"))
+
+    services = Service.query.all()
+    return render_template("service_request/edit.html", service_request=service_request, services=services)
+
+@app.route("/service_requests")
+@auth_required
+def view_service_requests():
+    if session.get("role") == "admin":
+        service_requests = ServiceRequest.query.all()
+    else:
+        service_requests = ServiceRequest.query.filter_by(CustomerID=session["user_id"]).all()
+    return render_template("service_request/view.html", service_requests=service_requests)
+
+@app.route("/service_request/delete/<int:request_id>", methods=["POST"])
+@auth_required
+def delete_service_request(request_id):
+    service_request = ServiceRequest.query.get_or_404(request_id)
+    if service_request.CustomerID != session["user_id"] and session.get("role") != "admin":
+        flash("You do not have permission to delete this service request")
+        return redirect(url_for("view_service_requests"))
+
+    db.session.delete(service_request)
+    db.session.commit()
+
+    flash("Service request deleted successfully")
+    return redirect(url_for("view_service_requests"))

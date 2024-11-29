@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Service Request{% endblock %}
+
+{% block content %}
+    <h1>Add Service Request</h1>
+    <form method="POST" action="{{ url_for('add_service_request') }}">
+        <div class="form-group">
+            <label for="service_id">Service</label>
+            <select id="service_id" name="service_id">
+                {% for service in services %}
+                    <option value="{{ service.ServiceID }}">{{ service.ServiceName }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="additional_info">Additional Information</label>
+            <textarea id="additional_info" name="additional_info"></textarea>
+        </div>
+        <button type="submit">Add Service Request</button>
+    </form>
+{% endblock %}

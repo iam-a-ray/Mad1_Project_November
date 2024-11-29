@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Service{% endblock %}
+
+{% block content %}
+    <h1>Add Service</h1>
+    <form method="POST" action="{{ url_for('add_service') }}">
+        <div class="form-group">
+            <label for="service_name">Service Name</label>
+            <input type="text" id="service_name" name="service_name" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="base_price">Base Price</label>
+            <input type="number" id="base_price" name="base_price" required>
+        </div>
+        <div class="form-group">
+            <label for="time_required">Time Required (minutes)</label>
+            <input type="number" id="time_required" name="time_required" required>
+        </div>
+        <div class="form-group">
+            <label for="category_id">Category</label>
+            <select id="category_id" name="category_id">
+                {% for category in categories %}
+                    <option value="{{ category.CategoryID }}">{{ category.Name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="pincode">Pincode</label>
+            <input type="text" id="pincode" name="pincode" required>
+        </div>
+        <button type="submit">Add Service</button>
+    </form>
+{% endblock %}

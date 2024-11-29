@@ -39,27 +39,28 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#}">View Service request</a></li>
-                        <li><a class="dropdown-item" href="{{url_for('working_service_request')}}">Working Service Requests</a></li>
+                        <li><a class="dropdown-item" href="#">Working Service Requests</a></li>
                     </ul>
                 </li> 
                 {% endif %}
                 
                 {% if session.get('role') == 'customer' %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('customer_dashboard')}}">Customer Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('customer_dashboard') }}">Customer Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('updateCustomerInfo')}}">Update Information</a>
+                    <a class="nav-link" href="{{ url_for('updateCustomerInfo') }}">Update Information</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Manage Requests
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{url_for('create_requests')}}">Create New Requests</a></li>
-                        <li><a class="dropdown-item" href="{{url_for('view_requests')}}">View Requests</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('add_service_request') }}">Create New Service Request</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('view_service_requests') }}">View Service Requests</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('edit_service_request', request_id=0) }}">Edit Service Requests</a></li>
                     </ul>
-                </li>  
+                </li>
                 {% endif %}
                 
                 <li class="nav-item">
