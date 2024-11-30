@@ -1,0 +1,134 @@
+{% extends 'layout.html' %}
+{% block title %}
+Search Services
+{% endblock %}
+
+{% block style %}
+<style>
+    .search-container {
+        margin-top: 20px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-label {
+        font-weight: bold;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .btn-submit {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-submit:hover {
+        background-color: #0056b3;
+    }
+    .table-container {
+        margin-top: 20px;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+    .no-results {
+        text-align: center;
+        font-size: 1.2em;
+        color: #888;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h2>Search Services</h2>
+    <form action="{{ url_for('search_services') }}" method="GET" class="form">
+        <div class="form-group">
+            <label for="category_id" class="form-label">Available Category</label>
+            <select id="category_id" name="category_id" class="form-control">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.CategoryID }}">{{ category.Name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="pincode" class="form-label">Search Through Location</label>
+            <input type="text" id="pincode" name="pincode" class="form-control" placeholder="Enter pincode">
+        </div>
+        <button type="submit" class="btn-submit">Search</button>
+    </form>
+</div>
+
+<div class="table-container">
+    <h3>Search Results</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Service Name</th>
+                <th>Description</th>
+                <th>Base Price</th>
+                <th>Time Required</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Pincode</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for service in services %}
+                <tr>
+                    <td>{{ service.ServiceName }}</td>
+                    <td>{{ service.Description }}</td>
+                    <td>{{ service.BasePrice }}</td>
+                    <td>{{ service.TimeRequired }}</td>
+                    <td>{{ service.category.Name }}</td>
+                    <td>{{ service.Status}}</td>
+                    <td>{{ service.Pincode }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('accept_service_request', service_id=service.ServiceID) }}" class="form-inline">
+                            <button type="submit" class="btn-accept">Accept</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reject_service_request', service_id=service.ServiceID) }}" class="form-inline">
+                            <button type="submit" class="btn-reject">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'layout.html' %}
+{% block title %}
+Orders
+{% endblock %}
+
+{% block style %}
+<style>
+    .table-container {
+        margin-top: 20px;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+    .heading {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .datetime {
+        font-size: 1.0rem;
+    }
+    .btn {
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <h1 class="display-1">Orders</h1>
+    <button class="btn btn-primary" onClick="window.print();">
+        <i class="fas fa-print"></i>
+        Print
+    </button>
+    <a href="{{ url_for('export_csv') }}" class="btn btn-outline-primary">
+        <i class="fas fa-file-export"></i>
+        Export
+    </a>
+    <hr>
+    {% if transactions|length > 0 %}
+        {% for transaction in transactions %}
+            <div class="heading">
+                <h2 class="text-muted">Transaction #{{ transaction.TransactionID }}</h2>
+                <p class="datetime">{{ transaction.Timestamp.strftime('%d %b %Y, %I:%M %p') }}</p>
+            </div>
+            <div class="orders">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Service Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in transaction.orders %}
+                            <tr>
+                                <td>{{ order.service.ServiceName }}</td>
+                                <td>{{ order.Quantity }}</td>
+                                <td>{{ order.UnitPrice }}</td>
+                                <td>{{ order.TotalPrice }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <h2>No Orders</h2>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

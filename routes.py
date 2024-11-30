@@ -1,9 +1,11 @@
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort,make_response
 from app import app
 from models import db, User, Service, ServiceRequest, FlaggedUser, ServiceCategory,Order,Transaction  
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
+import csv
+import io
 
 
 # Decorator to check if the user is logged in
@@ -259,25 +261,67 @@ def customer_dashboard(user):
         service_professionals=service_professionals,
     )
 
+# @app.route("/professional_dashboard")
+# @auth_required
+# def professional_dashboard():
+#     user_id = session["user_id"]
+#     user = User.query.get(user_id)
+#     if not user.isProfessional or not user.isApproved:
+#         flash("You do not have permission to access this page")
+#         return redirect(url_for("index"))
 
-# @app.route("/admin_dashboard")
-# @admin_required
-# def admin_dashboard(user):
-#     return render_template("admin/admin_dashboard.html", user=user)
+#     services = Service.query.filter_by(Profession=user.Profession).all()
+#     services = Service.query.join(ServiceCategory, Service.CategoryID == ServiceCategory.CategoryID).filter(ServiceCategory.Name == user.Profession).all()
+#     categories = ServiceCategory.query.all()
+#     return render_template("professional_dashboard.html", user=user, services=services, categories=categories)
 
+# @app.route("/search_services", methods=["GET"])
+# @auth_required
+# def search_services():
+#     user_id = session["user_id"]
+#     user = User.query.get(user_id)
+#     if not user.isProfessional or not user.isApproved:
+#         flash("You do not have permission to access this page")
+#         return redirect(url_for("index"))
+
+#     search_query = request.args.get("search_query")
+#     services = Service.query.filter(Service.ServiceName.ilike(f"%{search_query}%")).all()
+#     categories = ServiceCategory.query.all()
+#     return render_template("professional_dashboard.html", user=user, services=services, categories=categories)
 
 @app.route("/professional_dashboard")
-@professional_required
-def professional_dashboard(user):
-    service_requests = ServiceRequest.query.filter_by(ProfessionalID=user.UserID).all()
-    services = {service_request.service for service_request in service_requests}
-    return render_template(
-        "professional/professional_dashboard.html",
-        user=user,
-        service_requests=service_requests,
-        services=services,
-    )
+@auth_required
+def professional_dashboard():
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+    if not user.isProfessional or not user.isApproved:
+        flash("You do not have permission to access this page")
+        return redirect(url_for("index"))
 
+    services = Service.query.all()
+    categories = ServiceCategory.query.all()
+    return render_template("professional/professional_dashboard.html", user=user, services=services, categories=categories)
+
+@app.route("/search_services", methods=["GET"])
+@auth_required
+def search_services():
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+    if not user.isProfessional or not user.isApproved:
+        flash("You do not have permission to access this page")
+        return redirect(url_for("index"))
+    category_id = request.args.get("category_id", "")
+    pincode = request.args.get("pincode", "")
+
+    query = Service.query
+    if category_id:
+        query = query.filter_by(CategoryID=category_id)
+    if pincode:
+        query = query.filter_by(Pincode=pincode)
+
+    services = query.all()
+    categories = ServiceCategory.query.all()
+    return render_template("professional/search_services.html", user=user, services=services, categories=categories)
 
 @app.route("/")
 @auth_required
@@ -484,6 +528,22 @@ def updateCustomerInfo_post(user):
 
 #     flash("User flagged successfully")
 #     return redirect(url_for("flag_user"))
+
+@app.route("/orders")
+@auth_required
+def view_orders():
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+
+    if user.isCustomer:
+        orders = Order.query.join(Transaction).filter(Transaction.UserID == user_id).all()
+    elif user.isProfessional:
+        orders = Order.query.join(Service).filter(Service.ProfessionalID == user_id).all()
+    else:
+        flash("You do not have permission to access this page")
+        return redirect(url_for("index"))
+
+    return render_template("orders.html", user=user, orders=orders)
 
 @app.route("/profile")
 @auth_required
@@ -736,3 +796,76 @@ def delete_user(current_user, user_id):
 
     flash("User deleted successfully")
     return redirect(url_for("view_users"))
+
+@app.route("/export_csv")
+@auth_required
+def export_csv():
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+
+    if user.isCustomer:
+        transactions = Transaction.query.filter_by(UserID=user_id).all()
+    elif user.isProfessional:
+        transactions = Transaction.query.join(Order).join(Service).filter(Service.ProfessionalID == user_id).all()
+    else:
+        flash("You do not have permission to access this page")
+        return redirect(url_for("index"))
+
+    output = []
+    output.append(['Transaction ID', 'Service Name', 'Quantity', 'Unit Price', 'Total Price', 'Timestamp'])
+
+    for transaction in transactions:
+        for order in transaction.orders:
+            output.append([
+                transaction.TransactionID,
+                order.service.ServiceName,
+                order.Quantity,
+                order.UnitPrice,
+                order.TotalPrice,
+                transaction.Timestamp.strftime('%d %b %Y, %I:%M %p')
+            ])
+
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerows(output)
+    response = make_response(si.getvalue())
+    response.headers['Content-Disposition'] = 'attachment; filename=orders.csv'
+    response.headers["Content-type"] = "text/csv"
+    return response
+
+@app.route("/accept_service_request/<int:service_id>", methods=["POST"])
+@auth_required
+def accept_service_request(service_id):
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+    if not user.isProfessional or not user.isApproved:
+        flash("You do not have permission to accept this service request")
+        return redirect(url_for("search_services"))
+
+    service_request = ServiceRequest.query.filter_by(ServiceID=service_id, ProfessionalID=None).first()
+    if service_request:
+        service_request.ProfessionalID = user_id
+        service_request.Status = 'accepted'
+        db.session.commit()
+        flash("Service request accepted successfully")
+    else:
+        flash("Service request not found or already assigned")
+    return redirect(url_for("search_services"))
+
+@app.route("/reject_service_request/<int:service_id>", methods=["POST"])
+@auth_required
+def reject_service_request(service_id):
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+    if not user.isProfessional or not user.isApproved:
+        flash("You do not have permission to reject this service request")
+        return redirect(url_for("search_services"))
+
+    service_request = ServiceRequest.query.filter_by(ServiceID=service_id, ProfessionalID=None).first()
+    if service_request:
+        service_request.Status = 'rejected'
+        db.session.commit()
+        flash("Service request rejected successfully")
+    else:
+        flash("Service request not found or already assigned")
+    return redirect(url_for("search_services"))

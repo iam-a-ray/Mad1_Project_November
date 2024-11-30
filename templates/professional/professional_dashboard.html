@@ -1,72 +1,88 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
 {% block title %}
 Professional Dashboard
 {% endblock %}
 
 {% block style %}
 <style>
-    .dashboard-summary {
+    .dashboard-container {
         margin-top: 20px;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
     }
-    .dashboard-actions {
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+    .table-container {
         margin-top: 20px;
+        overflow-x: auto;
     }
-    .action-buttons {
-        display: flex;
-        gap: 10px;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #f1f1f1;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-summary">
-    <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{user.Username}}" alt="avatar" width="100"/>
-    <h2>Welcome, {{ user.Name }}</h2>
-    {% if services %}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Status</th>
-                <th>Budget</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for service in services %}
-            <tr>
-                <td>{{ service.Name }}</td>
-                <td>{{ service.Description }}</td>
-                <td>{{ service.StartDate }}</td>
-                <td>{{ service.EndDate }}</td>
-                <td>
-                    {% if service.Status %}
-                        Active
-                    {% else %}
-                        Completed
-                    {% endif %}
-                </td>
-                <td>₹{{ service.Budget }}</td>
-                <td>
-                    {% if service.Status == false %}
-                    <div class="action-buttons">
-                        <form method="POST" action="{{ url_for('accept_service', service_id=service.id) }}">
-                            <button type="submit" class="btn btn-success">Accept</button>
-                        </form>
-                        <form method="POST" action="{{ url_for('reject_service', service_id=service.id) }}">
-                            <button type="submit" class="btn btn-danger">Reject</button>
-                        </form>
-                    </div>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p>No services assigned to you yet.</p>
-    {% endif %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Professional Dashboard</h2>
+        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed={{ user.Username }}" alt="avatar" width="100"/>
+        <p>Welcome, {{ user.Username }}!</p>
+        <p>You are logged in as a Professional.</p>
+        <p>Your Rating: {{ user.Rating }}</p>
+        <p>Total Money Earned: ${{ total_money_earned }}</p>
+    </div>
+
+    <div class="dashboard-section table-container">
+        <h3>Assigned or Accepted Service Requests</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Service Name</th>
+                    <th>Description</th>
+                    <th>Base Price</th>
+                    <th>Time Required</th>
+                    <th>Category</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in service_requests %}
+                    <tr>
+                        <td>{{ request.service.ServiceName }}</td>
+                        <td>{{ request.ProblemDescription }}</td>
+                        <td>{{ request.service.BasePrice }}</td>
+                        <td>{{ request.service.TimeRequired }}</td>
+                        <td>{{ request.service.category.Name }}</td>
+                        <td>{{ request.DateOfCompletion }}</td>
+                        <td>{{ request.Status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
