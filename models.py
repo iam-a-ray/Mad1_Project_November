@@ -86,7 +86,7 @@ class ServiceRequest(db.Model):
     CreatedAt = db.Column(db.DateTime, default=db.func.now())
     UpdatedAt = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     Status = db.Column(
-        db.Enum('requested', 'assigned', 'closed', name='request_status'),
+        db.Enum('requested', 'assigned', 'closed','accepted',name='request_status'),
         default='requested',
         nullable=False
     )

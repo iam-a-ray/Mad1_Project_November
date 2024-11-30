@@ -63,11 +63,16 @@ Search Services
     tr:hover {
         background-color: #f1f1f1;
     }
-    .no-results {
-        text-align: center;
-        font-size: 1.2em;
-        color: #888;
-        margin-top: 20px;
+    .btn-accept {
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-accept:hover {
+        background-color: #218838;
     }
 </style>
 {% endblock %}
@@ -77,7 +82,11 @@ Search Services
     <h2>Search Services</h2>
     <form action="{{ url_for('search_services') }}" method="GET" class="form">
         <div class="form-group">
-            <label for="category_id" class="form-label">Available Category</label>
+            <label for="search_term" class="form-label">Search Term</label>
+            <input type="text" id="search_term" name="search_term" class="form-control" placeholder="Enter search term">
+        </div>
+        <div class="form-group">
+            <label for="category_id" class="form-label">Category</label>
             <select id="category_id" name="category_id" class="form-control">
                 <option value="">All Categories</option>
                 {% for category in categories %}
@@ -86,7 +95,7 @@ Search Services
             </select>
         </div>
         <div class="form-group">
-            <label for="pincode" class="form-label">Search Through Location</label>
+            <label for="pincode" class="form-label">Pincode</label>
             <input type="text" id="pincode" name="pincode" class="form-control" placeholder="Enter pincode">
         </div>
         <button type="submit" class="btn-submit">Search</button>
@@ -103,8 +112,8 @@ Search Services
                 <th>Base Price</th>
                 <th>Time Required</th>
                 <th>Category</th>
-                <th>Status</th>
                 <th>Pincode</th>
+                <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -116,16 +125,22 @@ Search Services
                     <td>{{ service.BasePrice }}</td>
                     <td>{{ service.TimeRequired }}</td>
                     <td>{{ service.category.Name }}</td>
-                    <td>{{ service.Status}}</td>
                     <td>{{ service.Pincode }}</td>
                     <td>
-                        <form method="POST" action="{{ url_for('accept_service_request', service_id=service.ServiceID) }}" class="form-inline">
-                            <button type="submit" class="btn-accept">Accept</button>
-                        </form>
-                        <form method="POST" action="{{ url_for('reject_service_request', service_id=service.ServiceID) }}" class="form-inline">
-                            <button type="submit" class="btn-reject">Reject</button>
-                        </form>
-                    </td>
+                            {% if service_request %}
+                                {{ service_request.Status }}
+                            {% else %}
+                                requested
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not service_request or service_request.Status == 'requested' %}
+                                <form method="POST" action="{{ url_for('accept_service_request', request_id=0
+                                ) }}" class="form-inline">
+                                    <button type="submit" class="btn-accept">Accept</button>
+                                </form>
+                            {% endif %}
+                        </td>
                 </tr>
             {% endfor %}
         </tbody>

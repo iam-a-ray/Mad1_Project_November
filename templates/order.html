@@ -30,66 +30,55 @@ Orders
     tr:hover {
         background-color: #f1f1f1;
     }
-    .heading {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
+    .btn-rate {
+        background-color: #ffc107;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
     }
-    .datetime {
-        font-size: 1.0rem;
-    }
-    .btn {
-        margin-right: 10px;
+    .btn-rate:hover {
+        background-color: #e0a800;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="table-container">
-    <h1 class="display-1">Orders</h1>
-    <button class="btn btn-primary" onClick="window.print();">
-        <i class="fas fa-print"></i>
-        Print
-    </button>
-    <a href="{{ url_for('export_csv') }}" class="btn btn-outline-primary">
-        <i class="fas fa-file-export"></i>
-        Export
-    </a>
-    <hr>
-    {% if transactions|length > 0 %}
-        {% for transaction in transactions %}
-            <div class="heading">
-                <h2 class="text-muted">Transaction #{{ transaction.TransactionID }}</h2>
-                <p class="datetime">{{ transaction.Timestamp.strftime('%d %b %Y, %I:%M %p') }}</p>
-            </div>
-            <div class="orders">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Service Name</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Total Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in transaction.orders %}
-                            <tr>
-                                <td>{{ order.service.ServiceName }}</td>
-                                <td>{{ order.Quantity }}</td>
-                                <td>{{ order.UnitPrice }}</td>
-                                <td>{{ order.TotalPrice }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endfor %}
-    {% else %}
-        <div class="alert alert-info">
-            <h2>No Orders</h2>
-        </div>
-    {% endif %}
+    <h1 class="display-4">Orders</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Service Name</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total Price</th>
+                <th>Timestamp</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+                {% for order in transaction.orders %}
+                    <tr>
+                        <td>{{ transaction.TransactionID }}</td>
+                        <td>{{ order.service.ServiceName }}</td>
+                        <td>{{ order.Quantity }}</td>
+                        <td>{{ order.UnitPrice }}</td>
+                        <td>{{ order.TotalPrice }}</td>
+                        <td>{{ transaction.Timestamp.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('rate_professional', request_id=order.ServiceID) }}" class="form-inline">
+                                <input type="number" name="rating" min="1" max="5" step="0.1" class="form-control" required>
+                                <button type="submit" class="btn-rate">Rate</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

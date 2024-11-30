@@ -55,6 +55,7 @@ def admin_required(f):
             flash("Access denied: Only admins can access this dashboard")
             return redirect(url_for("login"))
         return f(user=user, *args, **kwargs)
+        
 
     return decorated_function
 
@@ -499,36 +500,6 @@ def updateCustomerInfo_post(user):
     flash("Profile updated successfully")
     return redirect(url_for("customer_dashboard"))
 
-# @app.route("/flag_user")
-# @admin_required
-# def flag_user(user):
-#     flagged_users = FlaggedUser.query.all()
-#     return render_template(
-#         "admin/flag_user.html", user=user, flagged_users=flagged_users
-#     )
-
-# @app.route("/flag_user", methods=["POST"])
-# @admin_required
-# def flag_user_post(user):
-#     username = request.form.get("username")
-#     reason = request.form.get("reason")
-
-#     if not username or not reason:
-#         flash("Please fill all fields")
-#         return redirect(url_for("flag_user"))
-
-#     user = User.query.filter_by(Username=username).first()
-#     if not user:
-#         flash("User not found")
-#         return redirect(url_for("flag_user"))
-
-#     flagged_user = FlaggedUser(UserID=user.UserID, Reason=reason)
-#     db.session.add(flagged_user)
-#     db.session.commit()
-
-#     flash("User flagged successfully")
-#     return redirect(url_for("flag_user"))
-
 @app.route("/orders")
 @auth_required
 def view_orders():
@@ -736,6 +707,8 @@ def edit_service_request(request_id):
 def view_service_requests():
     if session.get("role") == "admin":
         service_requests = ServiceRequest.query.all()
+    elif session.get("role") == "professional":
+        service_requests = ServiceRequest.query.filter_by(ProfessionalID=session["user_id"]).all()
     else:
         service_requests = ServiceRequest.query.filter_by(CustomerID=session["user_id"]).all()
     return render_template("service_request/view.html", service_requests=service_requests)
@@ -789,7 +762,7 @@ def edit_user(user, user_id):
 
 @app.route("/delete_user/<int:user_id>", methods=["POST"])
 @admin_required
-def delete_user(current_user, user_id):
+def delete_user(user,user_id):
     user_to_delete = User.query.get_or_404(user_id)
     db.session.delete(user_to_delete)
     db.session.commit()
@@ -833,39 +806,64 @@ def export_csv():
     response.headers["Content-type"] = "text/csv"
     return response
 
-@app.route("/accept_service_request/<int:service_id>", methods=["POST"])
+@app.route("/accept_service_request/<int:request_id>", methods=["POST"])
 @auth_required
-def accept_service_request(service_id):
+def accept_service_request(request_id):
     user_id = session["user_id"]
     user = User.query.get(user_id)
     if not user.isProfessional or not user.isApproved:
         flash("You do not have permission to accept this service request")
         return redirect(url_for("search_services"))
 
-    service_request = ServiceRequest.query.filter_by(ServiceID=service_id, ProfessionalID=None).first()
-    if service_request:
+    service_request = ServiceRequest.query.get_or_404(request_id)
+    if service_request.Status == 'requested':
         service_request.ProfessionalID = user_id
-        service_request.Status = 'accepted'
+        service_request.Status = 'assigned'
         db.session.commit()
         flash("Service request accepted successfully")
     else:
         flash("Service request not found or already assigned")
     return redirect(url_for("search_services"))
 
-@app.route("/reject_service_request/<int:service_id>", methods=["POST"])
+@app.route("/complete_service_request/<int:request_id>", methods=["POST"])
 @auth_required
-def reject_service_request(service_id):
+def complete_service_request(request_id):
     user_id = session["user_id"]
     user = User.query.get(user_id)
     if not user.isProfessional or not user.isApproved:
-        flash("You do not have permission to reject this service request")
-        return redirect(url_for("search_services"))
+        flash("You do not have permission to complete this service request")
+        return redirect(url_for("view_service_requests"))
 
-    service_request = ServiceRequest.query.filter_by(ServiceID=service_id, ProfessionalID=None).first()
-    if service_request:
-        service_request.Status = 'rejected'
+    service_request = ServiceRequest.query.get_or_404(request_id)
+    if service_request.ProfessionalID == user_id and service_request.Status == 'assigned':
+        service_request.Status = 'closed'
+        service_request.DateOfCompletion = datetime.utcnow()
         db.session.commit()
-        flash("Service request rejected successfully")
+        flash("Service request marked as completed")
     else:
-        flash("Service request not found or already assigned")
-    return redirect(url_for("search_services"))
+        flash("You do not have permission to complete this service request")
+    return redirect(url_for("view_service_requests"))
+
+@app.route("/orders")
+@auth_required
+def orders():
+    user_id = session["user_id"]
+    transactions = Transaction.query.filter_by(UserID=user_id).order_by(Transaction.Timestamp.desc()).all()
+    return render_template('orders.html', transactions=transactions)
+
+@app.route("/rate_professional/<int:request_id>", methods=["POST"])
+@auth_required
+def rate_professional(request_id):
+    rating = request.form.get("rating")
+    service_request = ServiceRequest.query.get_or_404(request_id)
+    if service_request.Status == 'closed':
+        professional = User.query.get(service_request.ProfessionalID)
+        if professional:
+            professional.Rating = (professional.Rating + float(rating)) / 2
+            db.session.commit()
+            flash("Professional rated successfully")
+        else:
+            flash("Professional not found")
+    else:
+        flash("Service request is not closed")
+    return redirect(url_for("orders"))
